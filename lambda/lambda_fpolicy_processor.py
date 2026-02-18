@@ -5,8 +5,8 @@ Reads FPolicy log files from FSxN S3 Access Point, extracts 'create' operations,
 and sends them to SQS for downstream processing.
 
 Environment Variables:
-- S3_ACCESS_POINT_ARN: arn:aws:s3:ap-northeast-1:178625946981:accesspoint/fsxn-fpolicy-log-bucket
-- SQS_QUEUE_URL: https://sqs.ap-northeast-1.amazonaws.com/178625946981/FPolicy_Q
+- S3_ACCESS_POINT_ARN: Your FSxN S3 Access Point ARN
+- SQS_QUEUE_URL: Your AWS SQS URL
 - LOG_FILE_PREFIX: fpolicy_ (optional, default: fpolicy_)
 
 Trigger: EventBridge (CloudWatch Events) - Scheduled (e.g., every 5 minutes)
@@ -18,8 +18,8 @@ import os
 from datetime import datetime
 
 # Configuration from environment variables
-S3_ACCESS_POINT_ARN = os.environ.get('S3_ACCESS_POINT_ARN', 'arn:aws:s3:ap-northeast-1:178625946981:accesspoint/fsxn-fpolicy-log-bucket')
-SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL', 'https://sqs.ap-northeast-1.amazonaws.com/178625946981/FPolicy_Q')
+S3_ACCESS_POINT_ARN = os.environ.get('S3_ACCESS_POINT_ARN', '$Your FSxN S3 Access Point ARN')
+SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL', '$Your AWS SQS URL')
 LOG_FILE_PREFIX = os.environ.get('LOG_FILE_PREFIX', 'fpolicy_')
 
 # AWS clients
