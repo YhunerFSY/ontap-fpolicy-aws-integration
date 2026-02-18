@@ -1,6 +1,5 @@
 """
-NetApp ONTAP FPolicy External Server (Asynchronous Mode - Splunk Style)
-Only responds to NEGO_REQ, all other messages are processed without response
+NetApp ONTAP FPolicy External Server (Real-time mode)
 """
 
 import socket
