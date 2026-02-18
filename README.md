@@ -2,6 +2,7 @@
 A file event monitoring solution for NetApp ONTAP leveraging FPolicy External Server to integrate with AWS services.
 
 This project enables real-time or batch monitoring of file operations (create, delete, modify, rename, etc.) on NetApp ONTAP systems. It supports:
+
 	•	Local logging for on-premises event tracking
 	•	Integration with AWS services via Amazon SQS & Lambda
 	•	Event-driven architecture for cloud-based processing
