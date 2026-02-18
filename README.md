@@ -24,7 +24,7 @@ Users are responsible for configuring appropriate IAM permissions, Security Grou
 ## Architecture
 
 ```
-Client → FSxN (FPolicy) → External Server → Local Logs / SQS
+Client → NetApp ONYTAP (FPolicy) → External Server → Local Logs / SQS
                                                    ↓
                                             Lambda Processor
                                                    ↓
