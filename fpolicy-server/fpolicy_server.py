@@ -1,5 +1,5 @@
 """
-NetApp ONTAP FPolicy External Server
+NetApp ONTAP FPolicy External Server (Batch mode)
 Logs file events to local directory /mnt/fsxn_log
 """
 
