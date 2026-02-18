@@ -12,8 +12,8 @@ from datetime import datetime
 
 # Configuration
 FPOLICY_PORT = 9898
-SQS_URL = "https://sqs.ap-northeast-1.amazonaws.com/178625946981/FPolicy_Q"
-AWS_REGION = "ap-northeast-1"
+SQS_URL = "$AWS SQS ARN"
+AWS_REGION = "$Region"
 
 XML_DECL  = b'<?xml version="1.0"?>'
 SEPARATOR = b'\n\n'
