@@ -12,7 +12,7 @@ from datetime import datetime
 
 # Configuration
 FPOLICY_PORT = 9898
-SQS_URL = "$AWS SQS ARN"
+SQS_URL = "$AWS SQS URL"
 AWS_REGION = "$Region"
 
 XML_DECL  = b'<?xml version="1.0"?>'
