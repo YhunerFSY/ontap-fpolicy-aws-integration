@@ -10,6 +10,10 @@ This project enables real-time or batch monitoring of file operations (create, d
 Important:
 Users are responsible for configuring appropriate IAM permissions, Security Groups, firewall rules, routing settings, and any other necessary network or security configurations within their environment.
 
+![real-time flow](./images/FPolicy_Realtime.png)
+
+![batch flow](./images/FPolicy_Batch.png)
+
 ---
 
 ### Use Cases
