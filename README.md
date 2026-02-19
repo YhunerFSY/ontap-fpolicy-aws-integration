@@ -1,7 +1,7 @@
 # ontap-fpolicy-aws-integration
 A file event monitoring solution for NetApp ONTAP leveraging FPolicy External Server to integrate with AWS services.
 
-This project enables real-time or batch monitoring of file operations (create, delete, modify, rename, etc.) on NetApp ONTAP systems. It supports:
+This project enables near-real-time or batch monitoring of file operations (create, delete, modify, rename, etc.) on NetApp ONTAP systems. It supports:
 
 	•	Local logging for on-premises event tracking
 	•	Integration with AWS services via Amazon SQS & Lambda
@@ -10,9 +10,9 @@ This project enables real-time or batch monitoring of file operations (create, d
 Important:
 Users are responsible for configuring appropriate IAM permissions, Security Groups, firewall rules, routing settings, and any other necessary network or security configurations within their environment.
 
-![real-time flow](./images/FPolicy_Realtime.png)
+![near-real-time flow](./images/FPolicy_near-real-time.png)
 
-![batch flow](./images/FPolicy_Batch.png)
+![batch flow](./images/FPolicy_batch.png)
 
 ---
 
