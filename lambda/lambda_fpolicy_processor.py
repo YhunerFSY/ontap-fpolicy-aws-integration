@@ -3,13 +3,6 @@ AWS Lambda Function: FPolicy Log Processor
 
 Reads FPolicy log files from FSxN S3 Access Point, extracts 'create' operations,
 and sends them to SQS for downstream processing.
-
-Environment Variables:
-- S3_ACCESS_POINT_ARN: Your FSxN S3 Access Point ARN
-- SQS_QUEUE_URL: Your AWS SQS URL
-- LOG_FILE_PREFIX: fpolicy_ (optional, default: fpolicy_)
-
-Trigger: EventBridge (CloudWatch Events) - Scheduled (e.g., every 5 minutes)
 """
 
 import json
