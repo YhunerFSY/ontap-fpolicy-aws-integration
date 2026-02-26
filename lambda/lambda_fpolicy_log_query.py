@@ -36,7 +36,7 @@ from typing import Dict, List, Optional
 
 # Configuration
 S3_ACCESS_POINT_ARN = os.environ.get('S3_ACCESS_POINT_ARN', '$Your FSxN S3 Access Point ARN')
-SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL', '$Your Amazon SQS URL')
+SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL', '$Your AWS SQS URL')
 LOG_FILE_PREFIX = os.environ.get('LOG_FILE_PREFIX', 'fpolicy_')
 MAX_RESULTS = int(os.environ.get('MAX_RESULTS', '10000'))
 
