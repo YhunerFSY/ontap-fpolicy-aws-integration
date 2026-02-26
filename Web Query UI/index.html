@@ -54,7 +54,7 @@
       <div class="row-1">
         <div>
           <label>API エンドポイント（POST /query-logs）</label>
-          <input id="apiUrl" type="text" placeholder="https://.../prod/query-logs" />
+          <input id="apiUrl" type="text" placeholder="https://..." />
         </div>
       </div>
 
@@ -236,7 +236,7 @@
 
   // 初期化
   renderOps();
-  $("apiUrl").value = "https://zcah2cluph.execute-api.ap-northeast-1.amazonaws.com/prod/query-logs";
+  $("apiUrl").value = "https://";
   loadState();
 
   $("btnSend").addEventListener("click", send);
