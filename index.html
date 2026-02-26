@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FPolicy ログクエリ UI</title>
+<style>
+  :root {
+    --bg: #000000;
+    --card: #000000;
+    --text: #e6eaf2;
+    --muted: #9aa5b1;
+    --btn: #2a5bd7;
+    --border: #222;
+    --field: #111;
+  }
+  body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif; background: var(--bg); color: var(--text); }
+  .container { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 12px; }
+  .card { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  label { display: block; font-weight: 600; margin-bottom: 8px; }
+  input[type="text"], input[type="number"] {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--field); color: var(--text);
+    outline: none; box-sizing: border-box;
+  }
+  input::placeholder { color: #666; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--field); border: 1px solid var(--border); cursor: pointer; user-select: none; }
+  .chip input { width: 16px; height: 16px; }
+  .btns { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button {
+    background: var(--btn); color: white; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer;
+  }
+  button.warn { background: #8a3ffc; }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+  .kpi .item { background: var(--field); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+  .kpi .item .v { font-size: 22px; font-weight: 800; margin-top: 4px; }
+  .log { margin-top: 14px; white-space: pre-wrap; background: var(--field); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #cbd5e1; }
+  .muted { color: var(--muted); }
+  #busy { margin-left: 4px; }
+  @media (max-width: 800px) {
+    .row { grid-template-columns: 1fr; }
+    .kpi { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>FPolicy ログクエリ UI</h1>
+    <div class="card">
+      <div class="row-1">
+        <div>
+          <label>API エンドポイント（POST /query-logs）</label>
+          <input id="apiUrl" type="text" placeholder="https://.../prod/query-logs" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>開始時刻（YYYY-MM-DD HH:mm:SS）</label>
+          <input id="startTime" type="text" placeholder="2026-02-16 00:00:00" />
+        </div>
+        <div>
+          <label>終了時刻（YYYY-MM-DD HH:mm:SS）</label>
+          <input id="endTime" type="text" placeholder="2026-02-16 23:59:59" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>パス指定</label>
+          <input id="pathFilter" type="text" placeholder="/vol_onpre/" />
+        </div>
+        <div>
+          <label>上限件数（1〜10000）</label>
+          <input id="limit" type="number" min="1" max="10000" value="100" />
+        </div>
+      </div>
+
+      <div>
+        <label>操作タイプ指定</label>
+        <div class="chips" id="opsChips"></div>
+      </div>
+
+      <div class="btns" style="margin-top:12px;">
+        <button id="btnSend">クエリを送信</button>
+        <button id="btnPreview" class="warn">プレビュー</button>
+        <span id="busy" class="muted"></span>
+      </div>
+
+      <div class="kpi">
+        <div class="item"><div class="t muted">HTTP ステータス</div><div id="kHttp" class="v">-</div></div>
+        <div class="item"><div class="t muted">records_found</div><div id="kFound" class="v">-</div></div>
+        <div class="item"><div class="t muted">records_sent</div><div id="kSent" class="v">-</div></div>
+        <div class="item"><div class="t muted">sqs_messages_sent</div><div id="kSqs" class="v">-</div></div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>レスポンス / エラー</label>
+        <pre id="out" class="log">呼び出し待機中…</pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  const $ = (id) => document.getElementById(id);
+  const OPS = ["create","close","open","rename","delete","write","read"]; // API と一致させるため英小文字
+
+  function renderOps() {
+    const host = $("opsChips");
+    host.innerHTML = "";
+    OPS.forEach(op => {
+      const id = "op_" + op;
+      const wrap = document.createElement("label");
+      wrap.className = "chip";
+      wrap.innerHTML = `<input type="checkbox" id="${id}" value="${op}"/><span>${op}</span>`;
+      host.appendChild(wrap);
+    });
+  }
+
+  function getSelectedOps() {
+    return OPS.filter(op => $("op_" + op).checked);
+  }
+
+  function setSelectedOps(selected) {
+    OPS.forEach(op => { $("op_" + op).checked = selected.includes(op); });
+  }
+
+  function saveState() {
+    const state = {
+      apiUrl: $("apiUrl").value.trim(),
+      startTime: $("startTime").value.trim(),
+      endTime: $("endTime").value.trim(),
+      pathFilter: $("pathFilter").value.trim(),
+      limit: $("limit").value,
+      ops: getSelectedOps()
+    };
+    localStorage.setItem("fpolicy-ui", JSON.stringify(state));
+  }
+
+  function loadState() {
+    const str = localStorage.getItem("fpolicy-ui");
+    if (!str) return;
+    try {
+      const s = JSON.parse(str);
+      if (s.apiUrl) $("apiUrl").value = s.apiUrl;
+      if (s.startTime) $("startTime").value = s.startTime;
+      if (s.endTime) $("endTime").value = s.endTime;
+      if (s.pathFilter) $("pathFilter").value = s.pathFilter;
+      if (s.limit) $("limit").value = s.limit;
+      if (Array.isArray(s.ops)) setSelectedOps(s.ops);
+    } catch {}
+  }
+
+  function setBusy(isBusy) {
+    $("btnSend").disabled = isBusy;
+    $("btnPreview").disabled = isBusy;
+    $("busy").textContent = isBusy ? "リクエスト送信中…" : "";
+  }
+
+  function setKpi(http="-", found="-", sent="-", sqs="-") {
+    $("kHttp").textContent = http;
+    $("kFound").textContent = found;
+    $("kSent").textContent = sent;
+    $("kSqs").textContent = sqs;
+  }
+
+  function pretty(obj) {
+    try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
+  }
+
+  async function send() {
+    const apiUrl = $("apiUrl").value.trim();
+    const start = $("startTime").value.trim();
+    const end   = $("endTime").value.trim();
+    const path  = $("pathFilter").value.trim();
+    const limit = Number($("limit").value);
+    if (!apiUrl) return alert("API エンドポイントを入力してください");
+    if (!start || !end) return alert("開始・終了時刻を入力してください（YYYY-MM-DD HH:mm:SS）");
+
+    const ops = getSelectedOps();
+    const body = {
+      start_time: start,
+      end_time: end,
+      ...(path ? { path_filter: path } : {}),
+      ...(ops.length ? { operations: ops } : {}),
+      limit: limit || 1000
+    };
+
+    const headers = { "Content-Type": "application/json" };
+
+    saveState();
+    setBusy(true);
+    setKpi("-", "-", "-", "-");
+    $("out").textContent = "リクエスト送信中…";
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      const status = res.status;
+      let data;
+      try { data = await res.json(); } catch { data = await res.text(); }
+
+      setKpi(status, data?.records_found ?? "-", data?.records_sent ?? "-", data?.sqs_messages_sent ?? "-");
+      $("out").textContent = pretty(data);
+    } catch (err) {
+      setKpi("ERR", "-", "-", "-");
+      $("out").textContent = "リクエスト失敗：\n" + (err?.message || String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function preview() {
+    const start = $("startTime").value.trim();
+    const end   = $("endTime").value.trim();
+    const path  = $("pathFilter").value.trim();
+    const limit = Number($("limit").value);
+    const ops = getSelectedOps();
+    const body = {
+      start_time: start || "YYYY-MM-DD 00:00:00",
+      end_time: end   || "YYYY-MM-DD 23:59:59",
+      ...(path ? { path_filter: path } : {}),
+      ...(ops.length ? { operations: ops } : {}),
+      limit: limit || 1000
+    };
+    $("out").textContent = "リクエスト本文のプレビュー（送信しません）:\n\n" + pretty(body);
+  }
+
+  // 初期化
+  renderOps();
+  $("apiUrl").value = "https://zcah2cluph.execute-api.ap-northeast-1.amazonaws.com/prod/query-logs";
+  loadState();
+
+  $("btnSend").addEventListener("click", send);
+  $("btnPreview").addEventListener("click", preview);
+})();
+</script>
+</body>
+</html>
