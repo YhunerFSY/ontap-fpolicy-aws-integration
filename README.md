@@ -128,3 +128,27 @@ vserver fpolicy policy event show -vserver $VSERVER -event-name $EVENT_NAME -ins
 ```
 vserver fpolicy policy external-engine show -vserver $VSERVER -engine-name $ENGINE_NAME -instance
 ```
+
+## Important Note on Event Semantics
+
+This repository uses ONTAP FPolicy events as triggers for downstream processing.  
+These events should **not** be interpreted as having the same semantics as Amazon S3 `ObjectCreated` events.
+
+In particular, when using NFS workloads, an FPolicy notification may be observed **before the file write has fully completed** from the application perspective.  
+Therefore, downstream consumers must **not assume that the target file is already complete and ready for processing** at the moment the event is received.
+
+This is especially important for:
+- large files
+- long-running writes
+- near-real-time pipelines that immediately read the target file after receiving an event
+
+### NFSv3 limitation
+For NFSv3, this limitation is more significant because NFSv3 is stateless and does not provide a `CLOSE` operation that can be used for completion-based event handling.  
+As a result, this implementation cannot treat NFSv3 events as "write-complete" notifications.
+
+### Recommendation
+If strict "write-complete" semantics are required, additional workload-side design considerations are necessary.  
+Examples may include:
+- application-side rename-on-completion patterns
+- protocol/version choices that support stronger completion semantics
+- additional downstream readiness checks before processing
